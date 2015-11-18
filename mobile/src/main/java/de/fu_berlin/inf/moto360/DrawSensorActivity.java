@@ -133,7 +133,7 @@ public class DrawSensorActivity extends Activity {
     }
 
     public void processData(String message) {
-        String s[] = message.split(",");
+        String s[] = message.substring(1, message.length() - 1).split(",");
         int x = Math.round(Float.parseFloat(s[0]));
         int y = Math.round(Float.parseFloat(s[1]));
 
