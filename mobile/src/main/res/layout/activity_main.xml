@@ -1,0 +1,492 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:text="Accelerometer"
+            android:gravity="center_vertical|left" />
+
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/start_button"
+            android:id="@+id/startButton"
+            android:layout_alignParentTop="true"
+            android:layout_toStartOf="@+id/stopButton" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/stop_button"
+            android:id="@+id/stopButton"
+            android:nestedScrollingEnabled="false"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:id="@+id/lable_X"
+            android:text="@string/label_X"
+            android:layout_gravity="center_vertical" />
+
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:id="@+id/axisX"
+            android:ems="10"
+            android:background="#ffe8faff"
+            android:layout_gravity="center_vertical"
+            android:layout_toEndOf="@id/lable_X" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:id="@+id/label_Y"
+            android:text="@string/label_Y"
+            android:textSize="22sp"
+            android:layout_toEndOf="@id/axisX" />
+
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:ems="10"
+            android:background="#ffe8faff"
+            android:id="@+id/axisY"
+            android:layout_toEndOf="@id/label_Y" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:id="@+id/label_Z"
+            android:text="@string/label_Z"
+            android:textSize="22sp"
+            android:layout_toEndOf="@id/axisY" />
+
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:ems="10"
+            android:background="#ffe8faff"
+            android:id="@+id/axisZ"
+            android:layout_toEndOf="@id/label_Z" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:id="@+id/textView2Xlab"
+            android:text="@string/label_X"
+            android:layout_gravity="center_vertical" />
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:id="@+id/textView2X"
+            android:ems="10"
+            android:background="@android:color/holo_blue_light"
+            android:layout_gravity="center_vertical"
+            android:layout_toEndOf="@id/textView2Xlab" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:id="@+id/textView2Ylab"
+            android:text="@string/label_Y"
+            android:textSize="22sp"
+            android:layout_toEndOf="@id/textView2X" />
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:ems="10"
+            android:background="@android:color/holo_blue_light"
+            android:id="@+id/textView2Y"
+            android:layout_toEndOf="@id/textView2Ylab" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:id="@+id/textView2ZLab"
+            android:text="@string/label_Z"
+            android:textSize="22sp"
+            android:layout_toEndOf="@id/textView2Y" />
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:ems="10"
+            android:background="@android:color/holo_blue_light"
+            android:id="@+id/textView2Z"
+            android:layout_toEndOf="@id/textView2ZLab" />
+    </RelativeLayout>
+
+<!--
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="start"
+            android:id="@+id/startWriteFile"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:onClick="startLogging" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="stop"
+            android:id="@+id/stopWriteFile"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:onClick="stopLogging"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Write to File"
+            android:id="@+id/textView"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true" />
+    </RelativeLayout>
+-->
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp">
+
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="set sensor delta"
+            android:id="@+id/setDeltaButton"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true" />
+
+        <EditText
+            android:layout_width="50pt"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:ems="10"
+            android:id="@+id/deltaTextField"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:layout_alignBottom="@+id/setDeltaButton"
+            android:layout_alignParentStart="true"
+            android:hint="0.2"
+            android:layout_marginLeft="10pt"
+            android:imeActionLabel="setSensorDelta"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="den Arm vom Elbogen nach oben bewegen"
+            android:id="@+id/gest1Description"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="2pt" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/start_button"
+            android:id="@+id/startTrigger"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true"
+            android:onClick="startGestureRecognition" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/stop_button"
+            android:id="@+id/button2"
+            android:onClick="stopGestureRecognition"
+            android:layout_alignTop="@+id/startTrigger"
+            android:layout_alignParentEnd="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Gestute 1"
+            android:id="@+id/textGestute1"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="den Arm horizontal link und recht bewegen "
+            android:id="@+id/gest2Description"
+            android:layout_marginLeft="2pt" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp" >
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/start_button"
+            android:id="@+id/startRecogGesture2"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true"
+            android:onClick="startGestureRecognition" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/stop_button"
+            android:id="@+id/stopRecogGesture2"
+            android:onClick="stopGestureRecognition"
+            android:layout_alignTop="@+id/startRecogGesture2"
+            android:layout_alignParentEnd="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Gestute 2"
+            android:id="@+id/textGesture2"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="55dp">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="get sensor list"
+            android:id="@+id/getSensorListButton"
+            android:onClick="listSensors"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="START DRAWING"
+            android:id="@+id/startDrawingButton"
+            android:layout_alignBottom="@+id/getSensorListButton"
+            android:layout_alignParentEnd="true"
+            android:onClick="drawSensors" />
+    </RelativeLayout>
+</LinearLayout>
+
+<!--
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context=".MainActivity"
+    android:orientation="horizontal">
+
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:text="Accelerometer" />
+
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/start_button"
+        android:id="@+id/startButton"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/stop_button"
+        android:id="@+id/stopButton"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:nestedScrollingEnabled="false"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/axisX"
+        android:ems="10"
+        android:background="#ffe8faff"
+        android:layout_gravity="center_vertical" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/lableX"
+        android:text="@string/label_X"
+        android:textSize="22sp"
+        android:layout_gravity="center_vertical" />
+
+    &lt;!&ndash;   <TableRow android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:baselineAligned="true">
+&lt;!&ndash;
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:baselineAligned="false"
+        android:showDividers="beginning"
+        android:orientation="horizontal"
+        android:id="@+id/Accelerometer">
+&ndash;&gt;
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/lableX"
+            android:text="@string/label_X"
+            android:textSize="22sp"
+            android:layout_column="2"
+            android:layout_span="4" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/axisX"
+            android:ems="10"
+            android:background="#ffe8faff"
+            android:layout_column="6"
+            android:layout_span="16" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/label_Y"
+            android:text="@string/label_Y"
+            android:textSize="22sp"
+            android:layout_column="18"
+            android:layout_span="20" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:background="#ffe8faff"
+            android:id="@+id/axisY"
+            android:layout_column="22"
+            android:layout_span="32" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/label_Z"
+            android:text="@string/label_Z"
+            android:textSize="22sp"
+            android:layout_column="34"
+            android:layout_span="36" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:background="#ffe8faff"
+            android:id="@+id/axisZ"
+            android:layout_column="38"
+            android:layout_span="48" />
+
+    </TableRow>&ndash;&gt;
+
+    &lt;!&ndash;android:onClick="onResume" &ndash;&gt;
+
+
+    &lt;!&ndash;android:onClick="onPause" &ndash;&gt;
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/label_Y"
+        android:text="@string/label_Y"
+        android:textSize="22sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:background="#ffe8faff"
+        android:id="@+id/axisY" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/label_Z"
+        android:text="@string/label_Z"
+        android:textSize="22sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:background="#ffe8faff"
+        android:id="@+id/axisZ" />
+
+
+</LinearLayout>
+-->

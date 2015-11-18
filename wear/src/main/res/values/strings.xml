@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Moto360</string>
+    <string name="hello_round">Hello Round Moto360!</string>
+    <string name="hello_square">Hello Square Moto360!</string>
+</resources>
