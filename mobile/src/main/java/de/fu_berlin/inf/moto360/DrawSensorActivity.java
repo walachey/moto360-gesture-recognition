@@ -19,6 +19,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
 
@@ -33,6 +37,11 @@ public class DrawSensorActivity extends Activity {
     private int y_cur = 0;
     private int xx = 20;
     private int yy = 20;
+
+    // Output file used for logging sensor data.
+    // This is opened lazily when first receiving data.
+    OutputStreamWriter sensorDataOutput = null;
+    FileOutputStream sensorDataOutStream = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +70,19 @@ public class DrawSensorActivity extends Activity {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (sensorDataOutput != null) {
+            try {
+                sensorDataOutput.close();
+            } catch (IOException e) {
+                // I don't really care at this point.
+            }
+        }
+        if (sensorDataOutStream != null)
+            try {
+                sensorDataOutStream.close();
+            } catch (IOException e) {
+                // As above.
+            }
         stopService(new Intent(this, WatchDataReceiver.class));
     }
 
@@ -133,7 +155,30 @@ public class DrawSensorActivity extends Activity {
     }
 
     public void processData(String message) {
-        String s[] = message.substring(1, message.length() - 1).split(",");
+        // Remove opening and closing brackets from the message.
+        message = message.substring(1, message.length() - 1);
+        // Write message as-is to file.
+        if (sensorDataOutput == null) {
+            try {
+                File logfile = new File("/sdcard/sensor_out.csv");
+                logfile.delete();
+                logfile.createNewFile();
+                sensorDataOutStream = new FileOutputStream(logfile);
+                sensorDataOutput = new OutputStreamWriter(sensorDataOutStream);
+            } catch (IOException e) {
+                Log.e("Exception", "Opening file failed: " + e.toString());
+            }
+        }
+        // If we have a logfile, write the output.
+        if (sensorDataOutput != null) {
+            try {
+                sensorDataOutput.write("" + System.nanoTime() + ", " + message + "\n");
+            } catch (IOException e) {
+                Log.e("Exception", "Writing to file failed: " + e.toString());
+            }
+        }
+
+        String s[] = message.split(",");
         int x = Math.round(Float.parseFloat(s[0]));
         int y = Math.round(Float.parseFloat(s[1]));
 
