@@ -165,6 +165,7 @@ public class DrawSensorActivity extends Activity {
                 logfile.createNewFile();
                 sensorDataOutStream = new FileOutputStream(logfile);
                 sensorDataOutput = new OutputStreamWriter(sensorDataOutStream);
+                sensorDataOutput.write("timestamp, x, y, z\n");
             } catch (IOException e) {
                 Log.e("Exception", "Opening file failed: " + e.toString());
             }
@@ -173,6 +174,7 @@ public class DrawSensorActivity extends Activity {
         if (sensorDataOutput != null) {
             try {
                 sensorDataOutput.write("" + System.nanoTime() + ", " + message + "\n");
+                sensorDataOutput.flush();
             } catch (IOException e) {
                 Log.e("Exception", "Writing to file failed: " + e.toString());
             }
