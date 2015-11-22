@@ -49,11 +49,11 @@ public class MainActivity extends Activity implements SensorEventListener,
     private TextView mTextView;
     private ArrayAdapter<String> mAdapter;
 
-    private double[] valuesOld = {0.0,0.0,0.0};
-
     private double delta = 0.2;
     private boolean trigger = true;
-    private boolean ret = false;
+
+    // This is used as a simple low-pass filter to remove some constant acceleration (like gravity).
+    double[] gravity_compensation = {0., 0., 0.};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,8 +68,11 @@ public class MainActivity extends Activity implements SensorEventListener,
         });
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
+
+        // Todo: we need the gyroscope. It's probably better for gestures as the acceleration is inaccurate and biased.
+        // sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_NORMAL);
 
         if(accelerometer != null) {
             Log.v(LOG, ": Accelerometer registered.");
@@ -116,29 +119,19 @@ public class MainActivity extends Activity implements SensorEventListener,
     public void onSensorChanged(SensorEvent event) {
 
         if(trigger)
-            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER && event.values.length > 0) {
+            if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
+                // Update low-pass filter with new values.
+                final double alpha = 0.8;
+                for (int i = 0; i < 3; ++i)
+                    gravity_compensation[i] = alpha * gravity_compensation[i] + (1.0 - alpha) * event.values[i];
 
-                for (int i = 0; i < valuesOld.length; i++) {
+                // Now actually apply the filtering to the data.
+                for (int i = 0; i < 3; ++i)
+                    event.values[i] -= gravity_compensation[i];
 
-                    if (Math.abs(event.values[i] - valuesOld[i]) > delta){
-                        ret = true;
-                    }
-                }
-                if(ret){
-                    for(int i = 0; i < valuesOld.length; i++) {
-                        valuesOld[i] = event.values[i];
-                    }
-                    ret = false;
-                    sendMessageToHandheld(Arrays.toString(event.values));
-                }
-/*
-                String x = Double.toString(event.values[0]);
-                String y = Double.toString(event.values[1]);
-                String z = Double.toString(event.values[2]);
-
-                sendMessageToHandheld(x + "," + y + "," + z);
-*/
+                // Send the filtered data to the handheld device.
+                sendMessageToHandheld(Arrays.toString(event.values));
             }
     }
 
