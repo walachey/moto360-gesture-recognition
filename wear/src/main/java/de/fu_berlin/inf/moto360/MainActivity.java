@@ -9,6 +9,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.wearable.view.WatchViewStub;
 import android.util.Log;
@@ -55,6 +56,16 @@ public class MainActivity extends Activity implements SensorEventListener,
     // This is used as a simple low-pass filter to remove some constant acceleration (like gravity).
     double[] gravity_compensation = {0., 0., 0.};
 
+    // This is a short time integral over the gyroscope measurements.
+    // The data is sent once as new accelerometer input arrives (the acc. is the leading sensor).
+    double[] gyroscope_state = {0., 0., 0.};
+
+    // Startup nanoTime() to keep the absolute values tighter together.
+    long startupNanoTime = 0;
+    // The device will vibrate every second to easier allow for synchronized movement recording.
+    long lastVibrateNanoTime = 0;
+    Vibrator vibratorDevice = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,8 +82,8 @@ public class MainActivity extends Activity implements SensorEventListener,
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
 
-        // Todo: we need the gyroscope. It's probably better for gestures as the acceleration is inaccurate and biased.
-        // sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_NORMAL);
+        // We need the gyroscope. It's probably better for gestures as the acceleration is inaccurate and biased.
+        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
 
         if(accelerometer != null) {
             Log.v(LOG, ": Accelerometer registered.");
@@ -81,6 +92,8 @@ public class MainActivity extends Activity implements SensorEventListener,
         } else {
             Log.e(LOG, ": Registering accelerometer failed.");
         }
+
+        vibratorDevice = (Vibrator) getSystemService(VIBRATOR_SERVICE);
 
         googleApiClient = new GoogleApiClient.Builder(this).addApi(Wearable.API).build();
 //        googleApiClient.connect();
@@ -115,24 +128,69 @@ public class MainActivity extends Activity implements SensorEventListener,
         sensorManager.unregisterListener(this, accelerometer);
     }
 
+    // Saves the gyroscope readings, integrating over them if previous values are available.
+    void pushGyroscopeReadings(float[] values) {
+        for (int i = 0; i < 3; ++i)
+            gyroscope_state[i] += values[i];
+    }
+
+    // Retrieves the (possibly integrated) last gyroscope readings and resets the integral.
+    double[] popGyroscopeReadings() {
+        double[] values = gyroscope_state;
+        gyroscope_state = new double[] {0., 0., 0.};
+        return values;
+    }
+
     @Override
     public void onSensorChanged(SensorEvent event) {
+        // The handheld device is not currently requesting data from us?
+        if (!trigger) return;
 
-        if(trigger)
-            if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+        // The accelerometer is the leading sensor and will trigger a new message.
+        if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
-                // Update low-pass filter with new values.
-                final double alpha = 0.8;
-                for (int i = 0; i < 3; ++i)
-                    gravity_compensation[i] = alpha * gravity_compensation[i] + (1.0 - alpha) * event.values[i];
+            // Update low-pass filter with new values.
+            final double alpha = 0.8;
+            for (int i = 0; i < 3; ++i)
+                gravity_compensation[i] = alpha * gravity_compensation[i] + (1.0 - alpha) * event.values[i];
 
-                // Now actually apply the filtering to the data.
-                for (int i = 0; i < 3; ++i)
-                    event.values[i] -= gravity_compensation[i];
+            // This will hold the output data as a serializable list.
+            int dataOffset = 0;
+            double[] sensorReadings = new double[6];
 
-                // Send the filtered data to the handheld device.
-                sendMessageToHandheld(Arrays.toString(event.values));
+            // Get the time in nano seconds since the app started and add it to the data.
+            if (startupNanoTime == 0)
+                startupNanoTime = System.nanoTime();
+            final long timePassed = System.nanoTime() - startupNanoTime;
+
+            // The watch will vibrate regularly as a cheap metronome.
+            final long vibrateTimePassed = timePassed - lastVibrateNanoTime;
+            final long vibrateMillisecondsPassed = vibrateTimePassed / 1000 / 1000;
+            if (vibrateMillisecondsPassed >= 1000) {
+                lastVibrateNanoTime = timePassed;
+                vibratorDevice.vibrate(100);
             }
+
+            // Now actually apply the filtering to the data.
+            for (int i = 0; i < 3; ++i)
+                sensorReadings[dataOffset++] = event.values[i] - gravity_compensation[i];
+
+            // Append the last gyroscope readings integral to the output.
+            double[] lastGyroscopeReadings = popGyroscopeReadings();
+            for (int i = 0; i < 3; ++i)
+                sensorReadings[dataOffset++] = lastGyroscopeReadings[i];
+
+            // Send the filtered and concatenated data to the handheld device.
+            sendMessageToHandheld("" + timePassed + ", " + Arrays.toString(sensorReadings));
+
+            return;
+        }
+
+        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            // Save the values for when the accelerometer reports back next.
+            pushGyroscopeReadings(event.values);
+            return;
+        }
     }
 
     @Override

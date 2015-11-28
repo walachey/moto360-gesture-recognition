@@ -43,6 +43,9 @@ public class DrawSensorActivity extends Activity {
     OutputStreamWriter sensorDataOutput = null;
     FileOutputStream sensorDataOutStream = null;
 
+    // Make sure that the logged time starts at 0 by remembering when we started.
+    long startingTime = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -156,7 +159,7 @@ public class DrawSensorActivity extends Activity {
 
     public void processData(String message) {
         // Remove opening and closing brackets from the message.
-        message = message.substring(1, message.length() - 1);
+        message = message.replaceAll("\\[|\\]", "");
         // Write message as-is to file.
         if (sensorDataOutput == null) {
             try {
@@ -165,15 +168,17 @@ public class DrawSensorActivity extends Activity {
                 logfile.createNewFile();
                 sensorDataOutStream = new FileOutputStream(logfile);
                 sensorDataOutput = new OutputStreamWriter(sensorDataOutStream);
-                sensorDataOutput.write("timestamp, x, y, z\n");
+                sensorDataOutput.write("handheld,wear,x,y,z,phi_x,phi_y,phi_z\n");
             } catch (IOException e) {
                 Log.e("Exception", "Opening file failed: " + e.toString());
             }
         }
         // If we have a logfile, write the output.
         if (sensorDataOutput != null) {
+            if (startingTime == 0)
+                startingTime = System.nanoTime();
             try {
-                sensorDataOutput.write("" + System.nanoTime() + ", " + message + "\n");
+                sensorDataOutput.write("" + (System.nanoTime() - startingTime) + ", " + message + "\n");
                 sensorDataOutput.flush();
             } catch (IOException e) {
                 Log.e("Exception", "Writing to file failed: " + e.toString());
@@ -181,8 +186,8 @@ public class DrawSensorActivity extends Activity {
         }
 
         String s[] = message.split(",");
-        int x = Math.round(Float.parseFloat(s[0]));
-        int y = Math.round(Float.parseFloat(s[1]));
+        int x = Math.round(Float.parseFloat(s[1]));
+        int y = Math.round(Float.parseFloat(s[2]));
 
         if(x != x_cur) {
             xx += x;
