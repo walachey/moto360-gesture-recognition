@@ -35,8 +35,8 @@ public class DrawSensorActivity extends Activity {
     private int lWidth = 0;
     private int x_cur = 0;
     private int y_cur = 0;
-    private int xx = 20;
-    private int yy = 20;
+    private int xx = -10;
+    private int yy = -10;
 
     // Output file used for logging sensor data.
     // This is opened lazily when first receiving data.
@@ -168,7 +168,7 @@ public class DrawSensorActivity extends Activity {
                 logfile.createNewFile();
                 sensorDataOutStream = new FileOutputStream(logfile);
                 sensorDataOutput = new OutputStreamWriter(sensorDataOutStream);
-                sensorDataOutput.write("handheld,wear,x,y,z,phi_x,phi_y,phi_z\n");
+                sensorDataOutput.write("handheld,wear,x,y,z,phi_w,phi_x,phi_y,phi_z,gyro_acc\n");
             } catch (IOException e) {
                 Log.e("Exception", "Opening file failed: " + e.toString());
             }
@@ -186,19 +186,17 @@ public class DrawSensorActivity extends Activity {
         }
 
         String s[] = message.split(",");
-        int x = Math.round(Float.parseFloat(s[1]));
-        int y = Math.round(Float.parseFloat(s[2]));
+        int x = Math.round(10.0f * Float.parseFloat(s[1]));
+        int y = Math.round(10.0f * Float.parseFloat(s[2]));
 
-        if(x != x_cur) {
-            xx += x;
-            x_cur = x;
-            if(xx < 0 || xx > lWidth) {xx = lWidth/2; yy = lHeight/2;}
-        }
-        if(y != y_cur) {
-            yy += y;
-            y_cur = y;
-            if(yy < 0 || yy > lHeight) {xx = lWidth/2; yy = lHeight/2;}
-        }
+
+        xx += x;
+        x_cur = x;
+        if(xx < 0 || xx > lWidth) {xx = lWidth/2; yy = lHeight/2;}
+
+        yy += y;
+        y_cur = y;
+        if(yy < 0 || yy > lHeight) {xx = lWidth/2; yy = lHeight/2;}
         //Log.d("HANDHELD", "processData: layer Height "+lHeight+"\tlayer Width "+ lWidth);
     }
 

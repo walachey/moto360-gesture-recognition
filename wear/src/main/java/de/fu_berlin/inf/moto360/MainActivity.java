@@ -44,6 +44,7 @@ public class MainActivity extends Activity implements SensorEventListener,
 
     private SensorManager   sensorManager;
     private Sensor          accelerometer;
+    private Sensor          gyroscope;
 
     private GoogleApiClient googleApiClient;
 
@@ -58,7 +59,7 @@ public class MainActivity extends Activity implements SensorEventListener,
 
     // This is a short time integral over the gyroscope measurements.
     // The data is sent once as new accelerometer input arrives (the acc. is the leading sensor).
-    double[] gyroscope_state = {0., 0., 0.};
+    double[] gyroscope_state = {0., 0., 0., 0., 0.};
 
     // Startup nanoTime() to keep the absolute values tighter together.
     long startupNanoTime = 0;
@@ -83,7 +84,8 @@ public class MainActivity extends Activity implements SensorEventListener,
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_GAME);
 
         // We need the gyroscope. It's probably better for gestures as the acceleration is inaccurate and biased.
-        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
+        gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        sensorManager.registerListener(this, gyroscope, SensorManager.SENSOR_DELAY_GAME);
 
         if(accelerometer != null) {
             Log.v(LOG, ": Accelerometer registered.");
@@ -129,15 +131,16 @@ public class MainActivity extends Activity implements SensorEventListener,
     }
 
     // Saves the gyroscope readings, integrating over them if previous values are available.
-    void pushGyroscopeReadings(float[] values) {
-        for (int i = 0; i < 3; ++i)
+    void pushGyroscopeReadings(double[] values) {
+        for (int i = 0; i < 4; ++i)
             gyroscope_state[i] += values[i];
+        gyroscope_state[4] = values[4];
     }
 
     // Retrieves the (possibly integrated) last gyroscope readings and resets the integral.
     double[] popGyroscopeReadings() {
         double[] values = gyroscope_state;
-        gyroscope_state = new double[] {0., 0., 0.};
+        gyroscope_state = new double[] {0., 0., 0., 0., 0.};
         return values;
     }
 
@@ -150,13 +153,13 @@ public class MainActivity extends Activity implements SensorEventListener,
         if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
             // Update low-pass filter with new values.
-            final double alpha = 0.8;
+            final double alpha = 0.9;
             for (int i = 0; i < 3; ++i)
                 gravity_compensation[i] = alpha * gravity_compensation[i] + (1.0 - alpha) * event.values[i];
 
             // This will hold the output data as a serializable list.
             int dataOffset = 0;
-            double[] sensorReadings = new double[6];
+            double[] sensorReadings = new double[8];
 
             // Get the time in nano seconds since the app started and add it to the data.
             if (startupNanoTime == 0)
@@ -177,7 +180,7 @@ public class MainActivity extends Activity implements SensorEventListener,
 
             // Append the last gyroscope readings integral to the output.
             double[] lastGyroscopeReadings = popGyroscopeReadings();
-            for (int i = 0; i < 3; ++i)
+            for (int i = 0; i < 5; ++i)
                 sensorReadings[dataOffset++] = lastGyroscopeReadings[i];
 
             // Send the filtered and concatenated data to the handheld device.
@@ -187,8 +190,16 @@ public class MainActivity extends Activity implements SensorEventListener,
         }
 
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            // Convert to quaternion-style data.
+            float [] R = event.values;
+            double w = Math.cos(R[0] / 2) * Math.cos(R[1] / 2) * Math.cos(R[2] / 2) + Math.sin(R[0] / 2) * Math.sin(R[1] / 2) * Math.sin(R[2] / 2);
+            double x = Math.sin(R[0] / 2) * Math.cos(R[1] / 2) * Math.cos(R[2] / 2) - Math.cos(R[0] / 2) * Math.sin(R[1] / 2) * Math.sin(R[2] / 2);
+            double y = Math.cos(R[0] / 2) * Math.sin(R[1] / 2) * Math.cos(R[2] / 2) + Math.sin(R[0] / 2) * Math.cos(R[1] / 2) * Math.sin(R[2] / 2);
+            double z = Math.cos(R[0] / 2) * Math.cos(R[1] / 2) * Math.sin(R[2] / 2) - Math.sin(R[0] / 2) * Math.sin(R[1] / 2) * Math.cos(R[2] / 2);
+            // Append the gyroscope accuracy state.
+            double [] allData = {w, x, y, z, (double)event.accuracy};
             // Save the values for when the accelerometer reports back next.
-            pushGyroscopeReadings(event.values);
+            pushGyroscopeReadings(allData);
             return;
         }
     }
