@@ -169,8 +169,16 @@ public class MainActivity extends Activity implements SensorEventListener,
             // The watch will vibrate regularly as a cheap metronome.
             final long vibrateTimePassed = timePassed - lastVibrateNanoTime;
             final long vibrateMillisecondsPassed = vibrateTimePassed / 1000 / 1000;
-            if (vibrateMillisecondsPassed >= 1000) {
-                lastVibrateNanoTime = timePassed;
+            final long timeBetweenVibrations = 1000;
+            if (vibrateMillisecondsPassed >= timeBetweenVibrations) {
+                // Is this the first ring? Then we need to just initialize the value.
+                if (lastVibrateNanoTime == 0) {
+                    lastVibrateNanoTime = timePassed;
+                }
+                else // Otherwise, we add the vibration delay to not introduce an offset that accumulates over time.
+                {
+                    lastVibrateNanoTime += timeBetweenVibrations;
+                }
                 vibratorDevice.vibrate(100);
             }
 
