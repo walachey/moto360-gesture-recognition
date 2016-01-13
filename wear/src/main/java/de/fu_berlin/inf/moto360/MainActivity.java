@@ -54,9 +54,6 @@ public class MainActivity extends Activity implements SensorEventListener,
     private double delta = 0.2;
     private boolean trigger = true;
 
-    // This is used as a simple low-pass filter to remove some constant acceleration (like gravity).
-    double[] gravity_compensation = {0., 0., 0.};
-
     // This is a short time integral over the gyroscope measurements.
     // The data is sent once as new accelerometer input arrives (the acc. is the leading sensor).
     double[] gyroscope_state = {0., 0., 0., 0.};
@@ -152,11 +149,6 @@ public class MainActivity extends Activity implements SensorEventListener,
         // The accelerometer is the leading sensor and will trigger a new message.
         if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
-            // Update low-pass filter with new values.
-            final double alpha = 0.9;
-            for (int i = 0; i < 3; ++i)
-                gravity_compensation[i] = alpha * gravity_compensation[i] + (1.0 - alpha) * event.values[i];
-
             // This will hold the output data as a serializable list.
             int dataOffset = 0;
             double[] sensorReadings = new double[7];
@@ -184,7 +176,7 @@ public class MainActivity extends Activity implements SensorEventListener,
 
             // Now actually apply the filtering to the data.
             for (int i = 0; i < 3; ++i)
-                sensorReadings[dataOffset++] = event.values[i] - gravity_compensation[i];
+                sensorReadings[dataOffset++] = event.values[i];
 
             // Append the last gyroscope readings integral to the output.
             double[] lastGyroscopeReadings = popGyroscopeReadings();
