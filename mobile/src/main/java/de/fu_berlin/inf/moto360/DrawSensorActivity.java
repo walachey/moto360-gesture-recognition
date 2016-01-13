@@ -168,7 +168,7 @@ public class DrawSensorActivity extends Activity {
                 logfile.createNewFile();
                 sensorDataOutStream = new FileOutputStream(logfile);
                 sensorDataOutput = new OutputStreamWriter(sensorDataOutStream);
-                sensorDataOutput.write("handheld,wear,x,y,z,phi_w,phi_x,phi_y,phi_z,gyro_acc\n");
+                sensorDataOutput.write("handheld,wear,x,y,z,phi_x,phi_y,phi_z,gyro_acc\n");
             } catch (IOException e) {
                 Log.e("Exception", "Opening file failed: " + e.toString());
             }

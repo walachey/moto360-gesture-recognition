@@ -59,7 +59,7 @@ public class MainActivity extends Activity implements SensorEventListener,
 
     // This is a short time integral over the gyroscope measurements.
     // The data is sent once as new accelerometer input arrives (the acc. is the leading sensor).
-    double[] gyroscope_state = {0., 0., 0., 0., 0.};
+    double[] gyroscope_state = {0., 0., 0., 0.};
 
     // Startup nanoTime() to keep the absolute values tighter together.
     long startupNanoTime = 0;
@@ -132,15 +132,15 @@ public class MainActivity extends Activity implements SensorEventListener,
 
     // Saves the gyroscope readings, integrating over them if previous values are available.
     void pushGyroscopeReadings(double[] values) {
-        for (int i = 0; i < 4; ++i)
+        for (int i = 0; i < 3; ++i)
             gyroscope_state[i] += values[i];
-        gyroscope_state[4] = values[4];
+        gyroscope_state[3] = values[3];
     }
 
     // Retrieves the (possibly integrated) last gyroscope readings and resets the integral.
     double[] popGyroscopeReadings() {
         double[] values = gyroscope_state;
-        gyroscope_state = new double[] {0., 0., 0., 0., 0.};
+        gyroscope_state = new double[] {0., 0., 0., 0.};
         return values;
     }
 
@@ -159,7 +159,7 @@ public class MainActivity extends Activity implements SensorEventListener,
 
             // This will hold the output data as a serializable list.
             int dataOffset = 0;
-            double[] sensorReadings = new double[8];
+            double[] sensorReadings = new double[7];
 
             // Get the time in nano seconds since the app started and add it to the data.
             if (startupNanoTime == 0)
@@ -188,7 +188,7 @@ public class MainActivity extends Activity implements SensorEventListener,
 
             // Append the last gyroscope readings integral to the output.
             double[] lastGyroscopeReadings = popGyroscopeReadings();
-            for (int i = 0; i < 5; ++i)
+            for (int i = 0; i < 4; ++i)
                 sensorReadings[dataOffset++] = lastGyroscopeReadings[i];
 
             // Send the filtered and concatenated data to the handheld device.
@@ -198,14 +198,9 @@ public class MainActivity extends Activity implements SensorEventListener,
         }
 
         if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            // Convert to quaternion-style data.
-            float [] R = event.values;
-            double w = Math.cos(R[0] / 2) * Math.cos(R[1] / 2) * Math.cos(R[2] / 2) + Math.sin(R[0] / 2) * Math.sin(R[1] / 2) * Math.sin(R[2] / 2);
-            double x = Math.sin(R[0] / 2) * Math.cos(R[1] / 2) * Math.cos(R[2] / 2) - Math.cos(R[0] / 2) * Math.sin(R[1] / 2) * Math.sin(R[2] / 2);
-            double y = Math.cos(R[0] / 2) * Math.sin(R[1] / 2) * Math.cos(R[2] / 2) + Math.sin(R[0] / 2) * Math.cos(R[1] / 2) * Math.sin(R[2] / 2);
-            double z = Math.cos(R[0] / 2) * Math.cos(R[1] / 2) * Math.sin(R[2] / 2) - Math.sin(R[0] / 2) * Math.sin(R[1] / 2) * Math.cos(R[2] / 2);
+            final float [] R = event.values;
             // Append the gyroscope accuracy state.
-            double [] allData = {w, x, y, z, (double)event.accuracy};
+            double [] allData = {R[0], R[1], R[2], (double)event.accuracy};
             // Save the values for when the accelerometer reports back next.
             pushGyroscopeReadings(allData);
             return;
