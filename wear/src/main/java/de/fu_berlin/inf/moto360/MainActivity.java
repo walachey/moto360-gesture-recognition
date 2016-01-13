@@ -177,7 +177,7 @@ public class MainActivity extends Activity implements SensorEventListener,
                 }
                 else // Otherwise, we add the vibration delay to not introduce an offset that accumulates over time.
                 {
-                    lastVibrateNanoTime += timeBetweenVibrations;
+                    lastVibrateNanoTime += timeBetweenVibrations * 1000 * 1000;
                 }
                 vibratorDevice.vibrate(100);
             }
