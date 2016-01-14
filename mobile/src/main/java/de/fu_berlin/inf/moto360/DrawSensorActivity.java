@@ -46,6 +46,39 @@ public class DrawSensorActivity extends Activity {
     // Make sure that the logged time starts at 0 by remembering when we started.
     long startingTime = 0;
 
+    // Subclass that does a feature transformation by applying a moving average to the input features.
+    // The input can be len N vector and the output will also be len N (and smoothed over the last F frames).
+    class MovingAverage {
+        int timeWindow = 0;
+        double [][]oldValues = null;
+        private int rollingIndex = 0;
+        private int numberOfFeatures;
+        void MovingAverage(int timeWindow, int numberOfFeatures) {
+            this.timeWindow = timeWindow;
+            this.numberOfFeatures = numberOfFeatures;
+            // Initialize empty matrix of history values.
+            this.oldValues = new double[this.timeWindow][this.numberOfFeatures];
+        }
+
+        double []transform(double[] features) {
+            // Put current features into matrix at the oldest position.
+            this.oldValues[rollingIndex] = features;
+            // Advance rolling buffer index to next oldest position.
+            if (++rollingIndex >= timeWindow) rollingIndex = 0;
+            // The actual features are just the average over the history.
+            // Know your lang. specs:
+            // Each class variable, instance variable, or array component is initialized with a default value when it is created (§15.9, §15.10) -> 0.0 for doubles.
+            double []transformedFeatures = new double[numberOfFeatures];
+
+            for (int f = 0; f < numberOfFeatures; ++f) {
+                for (int i = 0; i < timeWindow; ++i)
+                    transformedFeatures[f] += oldValues[i][f];
+                transformedFeatures[f] /= (double)(timeWindow);
+            }
+            return transformedFeatures;
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
