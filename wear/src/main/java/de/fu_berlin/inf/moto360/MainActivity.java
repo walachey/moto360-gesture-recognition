@@ -161,7 +161,7 @@ public class MainActivity extends Activity implements SensorEventListener,
             // The watch will vibrate regularly as a cheap metronome.
             final long vibrateTimePassed = timePassed - lastVibrateNanoTime;
             final long vibrateMillisecondsPassed = vibrateTimePassed / 1000 / 1000;
-            final long timeBetweenVibrations = 1000;
+            final long timeBetweenVibrations = 2000;
             if (vibrateMillisecondsPassed >= timeBetweenVibrations) {
                 // Is this the first ring? Then we need to just initialize the value.
                 if (lastVibrateNanoTime == 0) {
