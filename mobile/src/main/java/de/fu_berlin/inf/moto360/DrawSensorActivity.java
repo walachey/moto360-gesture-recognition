@@ -24,7 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-
+import java.util.Arrays;
 
 public class DrawSensorActivity extends Activity {
 
@@ -46,21 +46,29 @@ public class DrawSensorActivity extends Activity {
     // Make sure that the logged time starts at 0 by remembering when we started.
     long startingTime = 0;
 
+    // Holds the transformers that provide the input for the machine learning algorithm.
+    FeatureUnion featureUnion = null;
+
     // Subclass that does a feature transformation by applying a moving average to the input features.
     // The input can be len N vector and the output will also be len N (and smoothed over the last F frames).
-    class MovingAverage {
+    class MovingAverage implements FeatureUnion.FeatureTransformer {
         int timeWindow = 0;
         double [][]oldValues = null;
         private int rollingIndex = 0;
         private int numberOfFeatures;
-        void MovingAverage(int timeWindow, int numberOfFeatures) {
+
+        MovingAverage(int timeWindow, int numberOfFeatures) {
             this.timeWindow = timeWindow;
             this.numberOfFeatures = numberOfFeatures;
             // Initialize empty matrix of history values.
             this.oldValues = new double[this.timeWindow][this.numberOfFeatures];
         }
+        
+        @Override
+        public int getNumberOfOutputFeatures() { return this.numberOfFeatures; }
 
-        double []transform(double[] features) {
+        @Override
+        public double []transform(double[] features) {
             // Put current features into matrix at the oldest position.
             this.oldValues[rollingIndex] = features;
             // Advance rolling buffer index to next oldest position.
@@ -99,6 +107,15 @@ public class DrawSensorActivity extends Activity {
         lWidth =    this.getResources().getDisplayMetrics().widthPixels; //layout.getWidth();
  //       lWidth = mView.getLayoutParams().width;
    //     lWidth = mView.getMeasuredWidth();
+
+        // The time windows of the moving averages have carefully been chosen by a hyperparameter-optimization
+        // using a (cross-validated) random forest as the classifier.
+        this.featureUnion = new FeatureUnion();
+        final int numberOfFeaturesFromWearableSensors = 6;
+        this.featureUnion.addTransformer(new MovingAverage(2, numberOfFeaturesFromWearableSensors));
+        this.featureUnion.addTransformer(new MovingAverage(5, numberOfFeaturesFromWearableSensors));
+        this.featureUnion.addTransformer(new MovingAverage(43, numberOfFeaturesFromWearableSensors));
+
         Log.d("HANDHELD", "onCreate: layer Height "+lHeight+" \tlayer Width "+ lWidth);
         initPaint();
     }
@@ -191,9 +208,22 @@ public class DrawSensorActivity extends Activity {
     }
 
     public void processData(String message) {
-        // Remove opening and closing brackets from the message.
-        message = message.replaceAll("\\[|\\]", "");
-        // Write message as-is to file.
+        // Parse into double array.
+        final String[] splitSensorReadings = message.split("[\\[\\],\\s]");
+        String[] cleanedSensorReadings = new String[8];
+        final double[] wearableInput = new double[6];
+        int wearableInputIndex = 0;
+        final int wearableInputIndexOffset = 1;
+        for (String valueString : splitSensorReadings) {
+            if (valueString.isEmpty()) continue;
+            cleanedSensorReadings[wearableInputIndex] = valueString;
+            if (wearableInputIndex++ < wearableInputIndexOffset) continue;
+            final int targetIndex = wearableInputIndex - wearableInputIndexOffset - 1;
+            if (targetIndex >= wearableInput.length) continue;
+            wearableInput[targetIndex] = Double.parseDouble(valueString);
+        }
+
+        // Open output file if not yet done.
         if (sensorDataOutput == null) {
             try {
                 File logfile = new File("/sdcard/sensor_out.csv");
@@ -201,26 +231,47 @@ public class DrawSensorActivity extends Activity {
                 logfile.createNewFile();
                 sensorDataOutStream = new FileOutputStream(logfile);
                 sensorDataOutput = new OutputStreamWriter(sensorDataOutStream);
-                sensorDataOutput.write("handheld,wear,x,y,z,phi_x,phi_y,phi_z,gyro_acc\n");
+                sensorDataOutput.write("handheld,wear,x,y,z,phi_x,phi_y,phi_z,gyro_acc");
+                for (String t : Arrays.asList("ma1", "ma2", "ma3")){
+                    for (String f : Arrays.asList("x", "y", "z", "phi_x", "phi_y", "phi_z")){
+                        sensorDataOutput.write("," + t + "_" + f);
+                    }
+                }
+                sensorDataOutput.write("\n");
             } catch (IOException e) {
                 Log.e("Exception", "Opening file failed: " + e.toString());
             }
         }
+
+        // Not all data from the wearable are necessarily features.
+        double [] rawFeatures = Arrays.copyOfRange(wearableInput, 0, 6);
+        // Now construct the actual features that are later passed to the classifier.
+        double [] features = this.featureUnion.transform(rawFeatures);
+
         // If we have a logfile, write the output.
         if (sensorDataOutput != null) {
             if (startingTime == 0)
                 startingTime = System.nanoTime();
             try {
-                sensorDataOutput.write("" + (System.nanoTime() - startingTime) + ", " + message + "\n");
+                // Write additional mobile data first.
+                sensorDataOutput.write("" + (System.nanoTime() - startingTime));
+                // Then comes the original message of the wearable.
+                for (String valueString : cleanedSensorReadings) {
+                    sensorDataOutput.write(", " + valueString);
+                }
+                // And finally the transformed features.
+                for (double feature : features) {
+                    sensorDataOutput.write(", " + Double.toString(feature));
+                }
+                sensorDataOutput.write("\n");
                 sensorDataOutput.flush();
             } catch (IOException e) {
                 Log.e("Exception", "Writing to file failed: " + e.toString());
             }
         }
 
-        String s[] = message.split(",");
-        int x = Math.round(10.0f * Float.parseFloat(s[1]));
-        int y = Math.round(10.0f * Float.parseFloat(s[2]));
+        int x = (int)(Math.round(10.0f * wearableInput[1]));
+        int y = (int)(Math.round(10.0f * wearableInput[2]));
 
 
         xx += x;
