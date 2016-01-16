@@ -10,6 +10,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,6 +24,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.net.DatagramPacket;
+import java.nio.charset.Charset;
 
 import static java.lang.System.out;
 
@@ -35,12 +42,16 @@ public class MainActivity extends Activity implements SensorEventListener {
     float[] sensorValues = new float[]{(float) 0.0, (float) 0.0, (float) 0.0};
     float x,y,z;
 
+    int port = 3012;
+    private String presentation_device_ip;
+
     TextView tvX;
     TextView tvY;
     TextView tvZ;
     TextView mtvX, mtvY, mtvZ;
     TextView gest1tv;
     EditText et;
+    EditText ip_field;
     int gest1Counter = 0;
 
     File file;
@@ -50,11 +61,16 @@ public class MainActivity extends Activity implements SensorEventListener {
     private boolean state1 = false, state2 = false, state3 = false;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // async call for udp packet instead?
+        if (android.os.Build.VERSION.SDK_INT > 9) {
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+            StrictMode.setThreadPolicy(policy);
+        }
 
         startService(new Intent(this, WatchDataReceiver.class));
 
@@ -70,6 +86,60 @@ public class MainActivity extends Activity implements SensorEventListener {
         gest1tv = (TextView) findViewById(R.id.textGestute1);
         et = (EditText) findViewById(R.id.deltaTextField);
         et.setText("0.2");
+        ip_field = (EditText) findViewById(R.id.ip_field);
+
+        final Button ip_button = (Button) findViewById(R.id.ip_button);
+        ip_button.setOnClickListener(new View.OnClickListener(){
+            public void onClick(View view){
+                presentation_device_ip = ip_field.getText().toString();
+                Toast.makeText(getApplicationContext(),
+                        "IP set to: " + presentation_device_ip,
+                        Toast.LENGTH_LONG).show();
+                Log.d("ip_field edited", ip_field.getText().toString());
+                Log.d( "ip set to", presentation_device_ip);
+            }
+        });
+
+        final Button left_button = (Button) findViewById(R.id.left_button);
+        left_button.setOnClickListener(new View.OnClickListener() {
+           public void onClick(View view) {
+               try {
+                   send_udp_packet(presentation_device_ip, port, "left");
+               } catch (SocketException e) {
+                   System.out.println("something went wrong with the socket :( \n");
+                   e.printStackTrace(System.out);
+               } catch (UnknownHostException e) {
+                   System.out.println("something went wrong with the host :( \n");
+                   e.printStackTrace(System.out);
+               } catch (IOException e) {
+                   System.out.println("something went wrong with the IO :( \n");
+                   e.printStackTrace(System.out);
+               }
+               Toast.makeText(getApplicationContext(),
+                       "left", Toast.LENGTH_LONG).show();
+           }
+        });
+
+        final Button right_button = (Button) findViewById(R.id.right_button);
+        right_button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                try {
+                    send_udp_packet(presentation_device_ip, port, "right");
+                } catch (SocketException e) {
+                    System.out.println("something went wrong with the socket :( \n");
+                    e.printStackTrace(System.out);
+                } catch (UnknownHostException e) {
+                    System.out.println("something went wrong with the host :( \n");
+                    e.printStackTrace(System.out);
+                } catch (IOException e) {
+                    System.out.println("something went wrong with the IO :( \n");
+                    e.printStackTrace(System.out);
+                }
+                Toast.makeText(getApplicationContext(),
+                        "left", Toast.LENGTH_LONG).show();
+            }
+        });
+
         Button setDelta = (Button) findViewById(R.id.setDeltaButton);
         setDelta.setOnClickListener(new View.OnClickListener()
         {
@@ -136,24 +206,36 @@ public class MainActivity extends Activity implements SensorEventListener {
         return super.onOptionsItemSelected(item);
     }
 
-private BroadcastReceiver messageReceiver2 = new BroadcastReceiver() {
-    @Override
-    public void onReceive(Context context, Intent intent) {
+    private BroadcastReceiver messageReceiver2 = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
 
-        String message = intent.getStringExtra("sensorData");
-        String s[] = message.split(",");
+            String message = intent.getStringExtra("sensorData");
+            String s[] = message.split(",");
 
-        x = Float.parseFloat(s[0]);
-        y = Float.parseFloat(s[1]);
-        z = Float.parseFloat(s[2]);
-     Log.d("watch sensor data",  "\t: " + x +  "\t: " + y + "\t: " + z );
-  /*      mtvX.setText(Float.toString(x).substring(0, 6));
-        mtvY.setText(Float.toString(y).substring(0,6));
-        mtvZ.setText(Float.toString(z).substring(0,6));
-*/
+            x = Float.parseFloat(s[0]);
+            y = Float.parseFloat(s[1]);
+            z = Float.parseFloat(s[2]);
+         Log.d("watch sensor data",  "\t: " + x +  "\t: " + y + "\t: " + z );
+      /*      mtvX.setText(Float.toString(x).substring(0, 6));
+            mtvY.setText(Float.toString(y).substring(0,6));
+            mtvZ.setText(Float.toString(z).substring(0,6));
+    */
+        }
+
+    };
+
+    public void send_udp_packet( String ip_address, int port, String message) throws UnknownHostException, SocketException, IOException  {
+        byte[] buffer = message.getBytes(Charset.forName("UTF-8"));
+        InetAddress address = InetAddress.getByName(ip_address);
+        DatagramPacket packet = new DatagramPacket(
+                buffer, buffer.length, address, port
+        );
+        DatagramSocket datagramSocket = new DatagramSocket();
+        datagramSocket.send(packet);
+        datagramSocket.close();
+        Log.d( "packet send", message + "send to " + presentation_device_ip);
     }
-
-};
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
@@ -161,10 +243,10 @@ private BroadcastReceiver messageReceiver2 = new BroadcastReceiver() {
         sensorValues[1] = sensorEvent.values[1];
         sensorValues[2] = sensorEvent.values[2];
 
+        //tvX.setText(Float.toString(sensorValues[0]).substring(0,4));
+        //tvY.setText(Float.toString(sensorValues[1]).substring(0,4));
+        //tvZ.setText(Float.toString(sensorValues[2]).substring(0,4));
 
-        tvX.setText(Float.toString(sensorValues[0]).substring(0,4));
-        tvY.setText(Float.toString(sensorValues[1]).substring(0,4));
-        tvZ.setText(Float.toString(sensorValues[2]).substring(0,4));
 
 
         if (trigger){
