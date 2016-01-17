@@ -94,7 +94,7 @@ public class MainActivity extends Activity implements SensorEventListener {
                 presentation_device_ip = ip_field.getText().toString();
                 Toast.makeText(getApplicationContext(),
                         "IP set to: " + presentation_device_ip,
-                        Toast.LENGTH_LONG).show();
+                        Toast.LENGTH_SHORT).show();
                 Log.d("ip_field edited", ip_field.getText().toString());
                 Log.d( "ip set to", presentation_device_ip);
             }
@@ -103,40 +103,18 @@ public class MainActivity extends Activity implements SensorEventListener {
         final Button left_button = (Button) findViewById(R.id.left_button);
         left_button.setOnClickListener(new View.OnClickListener() {
            public void onClick(View view) {
-               try {
-                   send_udp_packet(presentation_device_ip, port, "left");
-               } catch (SocketException e) {
-                   System.out.println("something went wrong with the socket :( \n");
-                   e.printStackTrace(System.out);
-               } catch (UnknownHostException e) {
-                   System.out.println("something went wrong with the host :( \n");
-                   e.printStackTrace(System.out);
-               } catch (IOException e) {
-                   System.out.println("something went wrong with the IO :( \n");
-                   e.printStackTrace(System.out);
-               }
+               send_udp_packet(presentation_device_ip, port, "left");
                Toast.makeText(getApplicationContext(),
-                       "left", Toast.LENGTH_LONG).show();
+                       "left ", Toast.LENGTH_SHORT).show();
            }
         });
 
         final Button right_button = (Button) findViewById(R.id.right_button);
         right_button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                try {
-                    send_udp_packet(presentation_device_ip, port, "right");
-                } catch (SocketException e) {
-                    System.out.println("something went wrong with the socket :( \n");
-                    e.printStackTrace(System.out);
-                } catch (UnknownHostException e) {
-                    System.out.println("something went wrong with the host :( \n");
-                    e.printStackTrace(System.out);
-                } catch (IOException e) {
-                    System.out.println("something went wrong with the IO :( \n");
-                    e.printStackTrace(System.out);
-                }
+                send_udp_packet(presentation_device_ip, port, "right");
                 Toast.makeText(getApplicationContext(),
-                        "left", Toast.LENGTH_LONG).show();
+                        "right ", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -225,16 +203,32 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     };
 
-    public void send_udp_packet( String ip_address, int port, String message) throws UnknownHostException, SocketException, IOException  {
+    public void send_udp_packet( String ip_address, int port, String message){
         byte[] buffer = message.getBytes(Charset.forName("UTF-8"));
-        InetAddress address = InetAddress.getByName(ip_address);
-        DatagramPacket packet = new DatagramPacket(
-                buffer, buffer.length, address, port
-        );
-        DatagramSocket datagramSocket = new DatagramSocket();
-        datagramSocket.send(packet);
-        datagramSocket.close();
-        Log.d( "packet send", message + "send to " + presentation_device_ip);
+
+
+
+        try {
+            InetAddress address = InetAddress.getByName(ip_address);
+
+            DatagramPacket packet = new DatagramPacket(
+                    buffer, buffer.length, address, port
+            );
+            DatagramSocket datagramSocket = new DatagramSocket();
+            datagramSocket.send(packet);
+            datagramSocket.close();
+            Log.d( "packet send", message + "send to " + presentation_device_ip);
+        }
+        catch (SocketException e) {
+            System.out.println("something went wrong with the socket :( \n");
+            e.printStackTrace(System.out);
+        } catch (UnknownHostException e) {
+            System.out.println("something went wrong with the host :( \n");
+            e.printStackTrace(System.out);
+        } catch (IOException e) {
+            System.out.println("something went wrong with the IO :( \n");
+            e.printStackTrace(System.out);
+        }
     }
 
     @Override
