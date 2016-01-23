@@ -194,11 +194,10 @@ public class MainActivity extends Activity implements SensorEventListener {
             x = Float.parseFloat(s[0]);
             y = Float.parseFloat(s[1]);
             z = Float.parseFloat(s[2]);
-         Log.d("watch sensor data",  "\t: " + x +  "\t: " + y + "\t: " + z );
-      /*      mtvX.setText(Float.toString(x).substring(0, 6));
-            mtvY.setText(Float.toString(y).substring(0,6));
-            mtvZ.setText(Float.toString(z).substring(0,6));
-    */
+
+            mtvX.setText(String.format("%.2f", x));
+            mtvY.setText(String.format("%.2f", y));
+            mtvZ.setText(String.format("%.2f", z));
         }
 
     };
