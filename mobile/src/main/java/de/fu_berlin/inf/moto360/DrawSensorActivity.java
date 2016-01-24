@@ -46,46 +46,8 @@ public class DrawSensorActivity extends Activity {
     // Make sure that the logged time starts at 0 by remembering when we started.
     long startingTime = 0;
 
-    // Holds the transformers that provide the input for the machine learning algorithm.
-    FeatureUnion featureUnion = null;
-
-    // Subclass that does a feature transformation by applying a moving average to the input features.
-    // The input can be len N vector and the output will also be len N (and smoothed over the last F frames).
-    class MovingAverage implements FeatureUnion.FeatureTransformer {
-        int timeWindow = 0;
-        double [][]oldValues = null;
-        private int rollingIndex = 0;
-        private int numberOfFeatures;
-
-        MovingAverage(int timeWindow, int numberOfFeatures) {
-            this.timeWindow = timeWindow;
-            this.numberOfFeatures = numberOfFeatures;
-            // Initialize empty matrix of history values.
-            this.oldValues = new double[this.timeWindow][this.numberOfFeatures];
-        }
-        
-        @Override
-        public int getNumberOfOutputFeatures() { return this.numberOfFeatures; }
-
-        @Override
-        public double []transform(double[] features) {
-            // Put current features into matrix at the oldest position.
-            this.oldValues[rollingIndex] = features;
-            // Advance rolling buffer index to next oldest position.
-            if (++rollingIndex >= timeWindow) rollingIndex = 0;
-            // The actual features are just the average over the history.
-            // Know your lang. specs:
-            // Each class variable, instance variable, or array component is initialized with a default value when it is created (§15.9, §15.10) -> 0.0 for doubles.
-            double []transformedFeatures = new double[numberOfFeatures];
-
-            for (int f = 0; f < numberOfFeatures; ++f) {
-                for (int i = 0; i < timeWindow; ++i)
-                    transformedFeatures[f] += oldValues[i][f];
-                transformedFeatures[f] /= (double)(timeWindow);
-            }
-            return transformedFeatures;
-        }
-    }
+    // The actual actor that reacts to the inputs.
+    GestureRecognitionActor gestureRecognitionActor = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,15 +69,6 @@ public class DrawSensorActivity extends Activity {
         lWidth =    this.getResources().getDisplayMetrics().widthPixels; //layout.getWidth();
  //       lWidth = mView.getLayoutParams().width;
    //     lWidth = mView.getMeasuredWidth();
-
-        // The time windows of the moving averages have carefully been chosen by a hyperparameter-optimization
-        // using a (cross-validated) random forest as the classifier.
-        this.featureUnion = new FeatureUnion();
-        final int numberOfFeaturesFromWearableSensors = 6;
-        this.featureUnion.addTransformer(new MovingAverage(2, numberOfFeaturesFromWearableSensors));
-        this.featureUnion.addTransformer(new MovingAverage(5, numberOfFeaturesFromWearableSensors));
-        this.featureUnion.addTransformer(new MovingAverage(43, numberOfFeaturesFromWearableSensors));
-
         Log.d("HANDHELD", "onCreate: layer Height "+lHeight+" \tlayer Width "+ lWidth);
         initPaint();
     }
@@ -245,8 +198,7 @@ public class DrawSensorActivity extends Activity {
 
         // Not all data from the wearable are necessarily features.
         double [] rawFeatures = Arrays.copyOfRange(wearableInput, 0, 6);
-        // Now construct the actual features that are later passed to the classifier.
-        double [] features = this.featureUnion.transform(rawFeatures);
+        gestureRecognitionActor.input(rawFeatures);
 
         // If we have a logfile, write the output.
         if (sensorDataOutput != null) {
@@ -260,7 +212,7 @@ public class DrawSensorActivity extends Activity {
                     sensorDataOutput.write(", " + valueString);
                 }
                 // And finally the transformed features.
-                for (double feature : features) {
+                for (double feature : gestureRecognitionActor.lastInputFeatures) {
                     sensorDataOutput.write(", " + Double.toString(feature));
                 }
                 sensorDataOutput.write("\n");
