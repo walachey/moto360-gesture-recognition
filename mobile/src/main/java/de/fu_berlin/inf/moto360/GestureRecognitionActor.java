@@ -1,5 +1,9 @@
 package de.fu_berlin.inf.moto360;
 
+import android.app.Application;
+import android.content.Context;
+import android.widget.Toast;
+
 import de.fu_berlin.inf.moto360.util.UDPInterface;
 
 /**
@@ -65,6 +69,9 @@ public class GestureRecognitionActor {
 	// Holds the last input vector. This can be used for e.g. logging.
 	double []lastInputFeatures = null;
 
+	// If set, this will be used to show an info message about the executed gesture.
+	Context infoMessageDisplayContext = null;
+
 	GestureRecognitionActor() {
 		// The time windows of the moving averages have carefully been chosen by a hyperparameter-optimization
 		// using a (cross-validated) random forest as the classifier.
@@ -98,7 +105,7 @@ public class GestureRecognitionActor {
 				-1.06807524e+00,  1.58488039e+01, -1.01452622e+01, -4.52010487e+00,
 				-9.25574619e-02, -4.82904919e-01,  1.18750491e-01,  1.58488640e+01,
 				-1.01453007e+01, -4.52012201e+00}},
-		new int[]{Gesture_Whitescreen, Gesture_None, Gesture_SwipeLeft, Gesture_SwipeRight});
+		new int[]{Gesture_SwipeLeft, Gesture_None, Gesture_SwipeRight, Gesture_Whitescreen});
 
 		// The values here are taken from an analysis that indicates that our predictions might
 		// only be as accurate as 25% sometimes. However, we are mainly mixing them up with "no_action"
@@ -106,7 +113,22 @@ public class GestureRecognitionActor {
 		predictionWindow = new PredictionTimeWindow(10, 0.25f, Gesture_None);
 	}
 
-	void input(double []X) {
+	public void setInfoDisplayContext(Context context) {
+		this.infoMessageDisplayContext = context;
+	}
+
+	private void sendMessageAsReaction(String message) {
+		// Notify the user about the huge success. First things first.
+		if (infoMessageDisplayContext != null) {
+			Toast.makeText(infoMessageDisplayContext, message, Toast.LENGTH_SHORT).show();
+		}
+		// Add a cooldown before the next action can be executed.
+		lastReactionTime = System.nanoTime();
+		// and finally send the message, too.
+		UDPInterface.getInstance().send(message);
+	}
+
+	public void input(double []X) {
 		// Now construct the actual features that are later passed to the classifier.
 		double [] features = this.featureUnion.transform(X);
 		lastInputFeatures = features;
@@ -123,27 +145,19 @@ public class GestureRecognitionActor {
 
 		// And then react!
 		int action = predictionWindow.getPrediction();
-		boolean reacted = false;
 
 		switch (action) {
 			case Gesture_None:
 				break;
 			case Gesture_SwipeLeft:
-				UDPInterface.getInstance().send("left");
-				reacted = true;
+				sendMessageAsReaction("left");
 				break;
 			case Gesture_SwipeRight:
-				UDPInterface.getInstance().send("right");
-				reacted = true;
+				sendMessageAsReaction("right");
 				break;
 			case Gesture_Whitescreen:
-				UDPInterface.getInstance().send("whitescreen");
-				reacted = true;
+				sendMessageAsReaction("whitescreen");
 				break;
-		}
-
-		if (reacted) {
-			lastReactionTime = currentSystemTime;
 		}
 	}
 }

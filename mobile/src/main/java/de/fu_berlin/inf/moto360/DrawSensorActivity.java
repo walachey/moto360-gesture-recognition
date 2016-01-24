@@ -69,6 +69,10 @@ public class DrawSensorActivity extends Activity {
         lWidth =    this.getResources().getDisplayMetrics().widthPixels; //layout.getWidth();
  //       lWidth = mView.getLayoutParams().width;
    //     lWidth = mView.getMeasuredWidth();
+
+        gestureRecognitionActor = new GestureRecognitionActor();
+        gestureRecognitionActor.setInfoDisplayContext(getApplicationContext());
+
         Log.d("HANDHELD", "onCreate: layer Height "+lHeight+" \tlayer Width "+ lWidth);
         initPaint();
     }
