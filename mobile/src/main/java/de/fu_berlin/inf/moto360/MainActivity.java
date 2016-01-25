@@ -205,9 +205,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     public void send_udp_packet( String ip_address, int port, String message){
         byte[] buffer = message.getBytes(Charset.forName("UTF-8"));
-
-
-
         try {
             InetAddress address = InetAddress.getByName(ip_address);
 
