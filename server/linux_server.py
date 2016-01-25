@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# Linux server
+
 import socket
 from subprocess import Popen, PIPE
 import fcntl
