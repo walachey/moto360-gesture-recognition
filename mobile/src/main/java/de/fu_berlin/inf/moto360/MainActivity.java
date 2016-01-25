@@ -31,6 +31,8 @@ import java.net.UnknownHostException;
 import java.net.DatagramPacket;
 import java.nio.charset.Charset;
 
+import de.fu_berlin.inf.moto360.util.UDPInterface;
+
 import static java.lang.System.out;
 
 
@@ -41,9 +43,6 @@ public class MainActivity extends Activity implements SensorEventListener {
     private Sensor mSensor;
     float[] sensorValues = new float[]{(float) 0.0, (float) 0.0, (float) 0.0};
     float x,y,z;
-
-    int port = 3012;
-    private String presentation_device_ip;
 
     TextView tvX;
     TextView tvY;
@@ -66,11 +65,8 @@ public class MainActivity extends Activity implements SensorEventListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // async call for udp packet instead?
-        if (android.os.Build.VERSION.SDK_INT > 9) {
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-            StrictMode.setThreadPolicy(policy);
-        }
+        // Set (hardcoded) target port for UDP interface.
+        UDPInterface.getInstance().setPort(3012);
 
         startService(new Intent(this, WatchDataReceiver.class));
 
@@ -91,19 +87,20 @@ public class MainActivity extends Activity implements SensorEventListener {
         final Button ip_button = (Button) findViewById(R.id.ip_button);
         ip_button.setOnClickListener(new View.OnClickListener(){
             public void onClick(View view){
-                presentation_device_ip = ip_field.getText().toString();
+                final String IPString = ip_field.getText().toString();
+                UDPInterface.getInstance().setTarget(IPString);
                 Toast.makeText(getApplicationContext(),
-                        "IP set to: " + presentation_device_ip,
+                        "IP set to: " + IPString,
                         Toast.LENGTH_SHORT).show();
-                Log.d("ip_field edited", ip_field.getText().toString());
-                Log.d( "ip set to", presentation_device_ip);
+                Log.d("ip_field edited", IPString);
+                Log.d( "ip set to", ip_field.getText().toString());
             }
         });
 
         final Button left_button = (Button) findViewById(R.id.left_button);
         left_button.setOnClickListener(new View.OnClickListener() {
            public void onClick(View view) {
-               send_udp_packet(presentation_device_ip, port, "left");
+               UDPInterface.getInstance().send("left");
                Toast.makeText(getApplicationContext(),
                        "left ", Toast.LENGTH_SHORT).show();
            }
@@ -112,7 +109,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         final Button right_button = (Button) findViewById(R.id.right_button);
         right_button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                send_udp_packet(presentation_device_ip, port, "right");
+                UDPInterface.getInstance().send("right");
                 Toast.makeText(getApplicationContext(),
                         "right ", Toast.LENGTH_SHORT).show();
             }
@@ -164,7 +161,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         public void onReceive(Context context, Intent intent) {
             String message = intent.getStringExtra("sensorData");
 
-            Log.d("HANDHELD","Main Activity messageReceiver "+ message);
+            Log.d("HANDHELD", "Main Activity messageReceiver " + message);
         }
     };
 
@@ -194,15 +191,14 @@ public class MainActivity extends Activity implements SensorEventListener {
             x = Float.parseFloat(s[0]);
             y = Float.parseFloat(s[1]);
             z = Float.parseFloat(s[2]);
-         Log.d("watch sensor data",  "\t: " + x +  "\t: " + y + "\t: " + z );
-      /*      mtvX.setText(Float.toString(x).substring(0, 6));
-            mtvY.setText(Float.toString(y).substring(0,6));
-            mtvZ.setText(Float.toString(z).substring(0,6));
-    */
+
+            mtvX.setText(String.format("%.2f", x));
+            mtvY.setText(String.format("%.2f", y));
+            mtvZ.setText(String.format("%.2f", z));
         }
 
     };
-
+    
     public void send_udp_packet( String ip_address, int port, String message){
         byte[] buffer = message.getBytes(Charset.forName("UTF-8"));
         try {
