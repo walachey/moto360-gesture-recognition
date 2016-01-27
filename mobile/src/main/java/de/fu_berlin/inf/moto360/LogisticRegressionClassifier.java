@@ -1,6 +1,6 @@
 package de.fu_berlin.inf.moto360;
 
-public class LogisticRegressionClassifier {
+public class LogisticRegressionClassifier implements Classifier {
 	// The beta coefficients of the log.reg.
 	double [][]betas;
 	// The symbolic classes that are returned by the predict function.
@@ -12,7 +12,7 @@ public class LogisticRegressionClassifier {
 	}
 
 	// Applies the regression to a feature vector and returns the most likely class (from the classmap).
-	int predict(double []X) {
+	public int predict(double []X) {
 		/*
 			Todo:
 			There are multiple things that can be changed. The predict function could also return the probability etc.

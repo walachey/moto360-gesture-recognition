@@ -52,7 +52,7 @@ public class GestureRecognitionActor {
 	}
 
 	// The actual classifier and post-classifier.
-	LogisticRegressionClassifier classifier = null;
+	Classifier classifier = null;
 	PredictionTimeWindow predictionWindow = null;
 	// Holds the transformers that provide the input for the machine learning algorithm.
 	FeatureUnion featureUnion = null;
