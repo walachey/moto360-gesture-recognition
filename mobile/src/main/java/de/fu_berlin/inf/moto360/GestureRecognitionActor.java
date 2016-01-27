@@ -78,8 +78,8 @@ public class GestureRecognitionActor {
 		this.featureUnion = new FeatureUnion();
 		final int numberOfFeaturesFromWearableSensors = 6;
 		this.featureUnion.addTransformer(new MovingAverage(2, numberOfFeaturesFromWearableSensors));
-		this.featureUnion.addTransformer(new MovingAverage(5, numberOfFeaturesFromWearableSensors));
-		this.featureUnion.addTransformer(new MovingAverage(43, numberOfFeaturesFromWearableSensors));
+		this.featureUnion.addTransformer(new MovingAverage(3, numberOfFeaturesFromWearableSensors));
+		this.featureUnion.addTransformer(new MovingAverage(23, numberOfFeaturesFromWearableSensors));
 
 		// Only the best hand-chosen betas are used here.
 		// The process for finding them involved long sessions of deep philosophical talk
