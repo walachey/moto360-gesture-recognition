@@ -198,31 +198,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         }
 
     };
-    
-    public void send_udp_packet( String ip_address, int port, String message){
-        byte[] buffer = message.getBytes(Charset.forName("UTF-8"));
-        try {
-            InetAddress address = InetAddress.getByName(ip_address);
-
-            DatagramPacket packet = new DatagramPacket(
-                    buffer, buffer.length, address, port
-            );
-            DatagramSocket datagramSocket = new DatagramSocket();
-            datagramSocket.send(packet);
-            datagramSocket.close();
-            Log.d( "packet send", message + "send to " + presentation_device_ip);
-        }
-        catch (SocketException e) {
-            System.out.println("something went wrong with the socket :( \n");
-            e.printStackTrace(System.out);
-        } catch (UnknownHostException e) {
-            System.out.println("something went wrong with the host :( \n");
-            e.printStackTrace(System.out);
-        } catch (IOException e) {
-            System.out.println("something went wrong with the IO :( \n");
-            e.printStackTrace(System.out);
-        }
-    }
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
