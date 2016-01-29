@@ -148,6 +148,9 @@ public class DrawSensorActivity extends Activity {
             view = findViewById(R.id.myDrawing);
 
             this.pointerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            this.pointerPaint.setTextAlign(Paint.Align.LEFT);
+            this.pointerPaint.setTextSize(60.0f);
+            this.pointerPaint.setFakeBoldText(true);
         }
 
         @Override
@@ -179,6 +182,37 @@ public class DrawSensorActivity extends Activity {
             this.pointerPaint.setStrokeWidth(10.0f);
             this.pointerPaint.setColor(0xff668800);
             canvas.drawLine(circleCenterX, circleCenterY, circleCenterX + pointerX, circleCenterY + pointerY, this.pointerPaint);
+
+            // Now draw the current predictions.
+            final float rectanglesLeft = 0.1f * (float)canvas.getWidth();
+            final float rectanglesTop = 0.05f * (float)canvas.getHeight();
+            final float rectanglesHeight = 0.10f * (float)canvas.getHeight();
+            final float rectanglesMargin = 0.01f * (float)canvas.getHeight();
+            final float rectanglesMaxWidth = 0.8f * (float)canvas.getWidth();
+            for (int i = 0; i < 4; ++i) {
+                final float posY = rectanglesTop + (rectanglesHeight + rectanglesMargin) * (float)i;
+                final double probability = gestureRecognitionActor.smoothedPredictionSituation[i];
+                final float width = rectanglesMaxWidth * (float) probability;
+                final String name = gestureRecognitionActor.GestureNameMapping[i];
+
+                // Dark shade that is visible when the rectangle is fully collapsed.
+                this.pointerPaint.setColor(0xff220000);
+                canvas.drawRect(rectanglesLeft, posY, rectanglesLeft + rectanglesMaxWidth, posY + rectanglesHeight,
+                        this.pointerPaint);
+                // Outer rect.
+                this.pointerPaint.setColor(0xff00aaee);
+                canvas.drawRoundRect(rectanglesLeft, posY, rectanglesLeft + width, posY + rectanglesHeight,
+                        10.0f, 10.0f, this.pointerPaint);
+                // Inner rect.
+                this.pointerPaint.setColor(0xff0066aa);
+                canvas.drawRoundRect(rectanglesLeft + 5.0f, posY + 5.0f,
+                        rectanglesLeft + width - 10.0f, posY + rectanglesHeight - 10.0f,
+                        20.0f, 20.0f, this.pointerPaint);
+                // And the text.
+                this.pointerPaint.setColor(0xffaaeeff);
+                canvas.drawText(name, 0.15f * rectanglesHeight + rectanglesLeft, posY + rectanglesHeight * 0.65f,
+                        this.pointerPaint);
+            }
 
             invalidate();
         }

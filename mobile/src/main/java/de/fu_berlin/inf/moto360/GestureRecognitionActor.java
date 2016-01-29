@@ -62,6 +62,10 @@ public class GestureRecognitionActor {
 	public static final int Gesture_SwipeLeft = 1;
 	public static final int Gesture_SwipeRight = 2;
 	public static final int Gesture_Whitescreen = 3;
+	public static final String []GestureNameMapping = {
+		"Idle", "Swipe left", "Swipe right", "Whitescreen"
+	};
+
 
 	// Enables a cooldown between gestures.
 	long lastReactionTime = 0;
@@ -71,6 +75,10 @@ public class GestureRecognitionActor {
 
 	// If set, this will be used to show an info message about the executed gesture.
 	Context infoMessageDisplayContext = null;
+
+	// This is a smoothed probability mapping of the gestures.
+	// This should only be used for display, as it has no actual deeper meaning.
+	public double []smoothedPredictionSituation;
 
 	GestureRecognitionActor() {
 		// The time windows of the moving averages have carefully been chosen by a hyperparameter-optimization
@@ -109,6 +117,9 @@ public class GestureRecognitionActor {
 		// This was carefully selected after having analyzed the influence of the window size
 		// on the recognition rate.
 		predictionWindow = new PredictionTimeWindow(10, 0.6f, Gesture_None);
+
+		// For the output. This will be a smoothed representation of the current prediction situation.
+		smoothedPredictionSituation = new double[4];
 	}
 
 	public void setInfoDisplayContext(Context context) {
@@ -139,23 +150,31 @@ public class GestureRecognitionActor {
 		final long currentSystemTime = System.nanoTime();
 		final long timePassed = currentSystemTime - lastReactionTime;
 		final long millisecondsPassed = timePassed / 1000 / 1000;
-		if (millisecondsPassed < 1000) return;
+		final boolean cooldownInPlace = millisecondsPassed < 1000;
 
 		// And then react!
 		int action = predictionWindow.getPrediction();
 
-		switch (action) {
-			case Gesture_None:
-				break;
-			case Gesture_SwipeLeft:
-				sendMessageAsReaction("left");
-				break;
-			case Gesture_SwipeRight:
-				sendMessageAsReaction("right");
-				break;
-			case Gesture_Whitescreen:
-				sendMessageAsReaction("whitescreen");
-				break;
+		// Actually do something only when no cooldown is active.
+		if (!cooldownInPlace) {
+			switch (action) {
+				case Gesture_None:
+					break;
+				case Gesture_SwipeLeft:
+					sendMessageAsReaction("left");
+					break;
+				case Gesture_SwipeRight:
+					sendMessageAsReaction("right");
+					break;
+				case Gesture_Whitescreen:
+					sendMessageAsReaction("whitescreen");
+					break;
+			}
 		}
+
+		// Update the display information.
+		for (int i = 0; i < 4; ++i)
+			smoothedPredictionSituation[i] *= 0.9;
+		smoothedPredictionSituation[action] = 1.0;
 	}
 }
