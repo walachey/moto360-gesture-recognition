@@ -33,8 +33,9 @@ public class DrawSensorActivity extends Activity {
 
     private int lHeight = 0;
     private int lWidth = 0;
-    private int x_cur = 0;
-    private int y_cur = 0;
+    private float x_cur = 0.f;
+    private float y_cur = 0.f;
+    private float z_cur = 0.f;
     private int xx = -10;
     private int yy = -10;
 
@@ -135,6 +136,9 @@ public class DrawSensorActivity extends Activity {
         private ArrayList<PathWithPaint> _graphics1 = new ArrayList<>();
         private View view;
 
+        // Circle and pointer colour.
+        Paint pointerPaint;
+
         public DrawingView(Context context) {
             super(context);
             mPath = new Path();
@@ -142,25 +146,41 @@ public class DrawSensorActivity extends Activity {
             mCanvas = new Canvas(mBitmap);
             this.setBackgroundColor(Color.BLACK);
             view = findViewById(R.id.myDrawing);
+
+            this.pointerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
+            // The pointer shows the direction of the current acceleration in XYZ.
+            final float pointerX = 100.0f * z_cur;
+            final float pointerY = 100.0f * x_cur;
+            final float pointerZ = 100.0f * y_cur;
+            // Draw circle at the bottom of the screen.
+            final float circleRadius = 0.30f * (float)canvas.getWidth();
+            final float circleCenterX = 0.50f * (float)canvas.getWidth();
+            final float circleCenterY = 0.75f * (float)canvas.getHeight();
+            // Outer big circle.
+            this.pointerPaint.setStrokeWidth(1.0f);
+            this.pointerPaint.setColor(0xffaadd00);
+            canvas.drawCircle(circleCenterX, circleCenterY, circleRadius, this.pointerPaint);
+            // Inner big circle.
+            this.pointerPaint.setColor(0xff336600);
+            canvas.drawCircle(circleCenterX, circleCenterY, 0.85f * circleRadius, this.pointerPaint);
+            // Outer small circle.
+            this.pointerPaint.setColor(0xffeeff00);
+            this.pointerPaint.setStrokeWidth(2.5f);
+            canvas.drawCircle(circleCenterX, circleCenterY, Math.abs(pointerZ), this.pointerPaint);
+            // Inner small circle.
+            this.pointerPaint.setColor(0xff88aa00);
+            canvas.drawCircle(circleCenterX, circleCenterY, 0.9f * Math.abs(pointerZ), this.pointerPaint);
+            // Pointer.
+            this.pointerPaint.setStrokeWidth(10.0f);
+            this.pointerPaint.setColor(0xff668800);
+            canvas.drawLine(circleCenterX, circleCenterY, circleCenterX + pointerX, circleCenterY + pointerY, this.pointerPaint);
 
-            PathWithPaint pwp = new PathWithPaint();
-            mCanvas.drawPath(mPath, mPaint);
-            mPath.lineTo(xx, yy); //TODO initialize floats for drawing
-//            mPath.lineTo(lWidth / 2, lHeight/2 );
-            pwp.setPath(mPath);
-            pwp.setPaint(mPaint);
-            _graphics1.add(pwp);
             invalidate();
-
-            if(_graphics1.size() > 0) {
-                canvas.drawPath(_graphics1.get(_graphics1.size() - 1).getPath(),
-                                _graphics1.get(_graphics1.size() - 1).getPaint());
-            }
         }
     }
 
@@ -226,16 +246,14 @@ public class DrawSensorActivity extends Activity {
             }
         }
 
-        int x = (int)(Math.round(10.0f * wearableInput[1]));
-        int y = (int)(Math.round(10.0f * wearableInput[2]));
+        x_cur = (float)(wearableInput[0]);
+        y_cur = (float)(wearableInput[1]);
+        z_cur = (float)(wearableInput[2]);
 
-
-        xx += x;
-        x_cur = x;
+        xx += (int)(x_cur);
         if(xx < 0 || xx > lWidth) {xx = lWidth/2; yy = lHeight/2;}
 
-        yy += y;
-        y_cur = y;
+        yy += (int)(y_cur);
         if(yy < 0 || yy > lHeight) {xx = lWidth/2; yy = lHeight/2;}
         //Log.d("HANDHELD", "processData: layer Height "+lHeight+"\tlayer Width "+ lWidth);
     }
