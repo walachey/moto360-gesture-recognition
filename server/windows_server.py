@@ -9,7 +9,6 @@ UDP_PORT = 3012
 sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM) 
 sock.bind((UDP_IP, UDP_PORT))
 
-
 shell = win32com.client.Dispatch("WScript.Shell")
 def use_key( key):
 	key = key.upper()
@@ -17,9 +16,10 @@ def use_key( key):
  
 print( "Enter the IP address: " + UDP_IP + " into your mobile phone app")
 counter = 0
-while counter < 10:
+while True:
 	data, addr = sock.recvfrom(1024)
-	data_string = data.decode(encoding="utf-8") 	
-	use_key(data_string)
+	data_string = data.decode(encoding="utf-8") 
 	print("received data: " + data_string)
-	counter += 1
+	if( data_string == "stop_server"):
+		break
+	use_key(data_string)
