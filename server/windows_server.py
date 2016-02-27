@@ -11,8 +11,11 @@ sock.bind((UDP_IP, UDP_PORT))
 
 shell = win32com.client.Dispatch("WScript.Shell")
 def use_key( key):
-	key = key.upper()
-	shell.SendKeys("{"+key+"}")
+	if( key != "whitescreen"):
+		key = key.upper()
+		shell.SendKeys("{"+key+"}")
+	else:
+		pass # set whitescreen for application
  
 print( "Enter the IP address: " + UDP_IP + " into your mobile phone app")
 counter = 0
